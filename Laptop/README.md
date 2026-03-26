@@ -7,8 +7,11 @@ Scripts and catkin workshops to be built and run on the host computer
 ## smthsmth_ws
 description
 
-Source command:
+Build/Source command:
 
 ```
+cd ~/smthsmth_ws
+rm -rf build/ devel/
+catkin_make
 source ~/smthsmth_ws/devel/setup.zsh
 ```
