@@ -1,0 +1,78 @@
+#Navigation official intro：http://wiki.ros.org/navigation/Tutorials
+#Robot setup: http://wiki.ros.org/navigation/Tutorials/RobotSetup
+#move_base: http://wiki.ros.org/move_base
+
+# global path planner
+#base_global_planner: "carrot_planner/CarrotPlanner"
+#base_global_planner: "navfn/NavfnROS" 
+base_global_planner: "global_planner/GlobalPlanner"
+
+# local path planner
+#The local path planner will be reset in the corresponding files "teb_local_planner.launch" and "dwa_local_planner.launch".
+#base_local_planner: "dwa_local_planner/DWAPlannerROS"
+base_local_planner: "teb_local_planner/TebLocalPlannerROS"
+
+# The frequency of publishing robot speed control commands in the topic cmd_vel, in Hz
+controller_frequency: 10.0 
+
+#The global path planner's planning frequency; if set to 0, it will only execute once when setting the target point location. (Unit: Hz)
+planner_frequency: 1.0  
+
+#If path planning fails, attempt to replan several times before performing recovery behavior. Setting it to -1 means infinite retries.
+max_planning_retries: 1  
+
+#whether to update to the cost map when move_base is inactive
+shutdown_costmaps: false  
+
+#Configure recovery behavior
+recovery_behaviors:  
+  # name 1
+  - name: 'recovery_behavior_1'  
+  # type
+    type: 'clear_costmap_recovery/ClearCostmapRecovery'  
+  # name 2
+  - name: 'recovery_behavior_2'  
+  # type
+    type: 'rotate_recovery/RotateRecovery'  
+  # name 3
+  - name: 'recovery_behavior_3' 
+  # type
+    type: 'move_slow_and_clear/MoveSlowAndClear'  
+ 
+#Whether to enable recovery behavior, we choose not to enable it here, because recovery behavior is not very useful and enabling it is a waste of time.
+recovery_behavior_enabled: false 
+#Whether to enable the recovery behavior that controls robot rotation in the recovery behavior. Only used when move_base uses the default recovery behavior.
+clearing_rotation_allowed: false 
+
+#When the recovery behavior is executed, obstacles 3 meters away from the robot will be cleared, in seconds. Only used when move_base uses the default recovery behavior.
+conservative_reset_dist: 3.0
+
+#How long after path planning fails will a recovery action be executed, in seconds.
+planner_patience: 3.0  
+#How long after certain control commands are not received will a recovery action be performed, in seconds.
+controller_patience: 3.0 
+
+#When a robot is moving, but the amplitude of the movement is not greater than a certain value, the robot is considered to be in an oscillating state, measured in meters (m).
+oscillation_distance: 0.02  
+#How long the robot remain in an oscillating state before executing a recovery action, in seconds.
+oscillation_timeout: 10.0 
+
+#recovery behavior parameters
+recovery_behavior_1:
+  #Obstacles 1 meters away from the robot will be cleared.
+  reset_distance: 1.0  
+recovery_behavior_2:
+  #Obstacles 3 meters away from the robot will be cleared.
+  reset_distance: 3.0  
+recovery_behavior_3:
+  #Obstacles 5 meters away from the robot will be cleared.
+  clearing_distance: 5.0
+  #Linear velocity of the robot when limiting recovery behavior, in m/s
+  limited_trans_speed: 0.1  
+  #The robot's angular velocity during the restricted recovery behavior, in rad/s.
+  limited_rot_speed: 0.4  
+  #The distance the robot must move to complete this recovery action, in meters.
+  limited_distance: 0.3  
+  #The name of the corresponding local path planner
+  #planner_namespace: “DWAPlannerROS”
+  planner_namespace: TebLocalPlannerROS

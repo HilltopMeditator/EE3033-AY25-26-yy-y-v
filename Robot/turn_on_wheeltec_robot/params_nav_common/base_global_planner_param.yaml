@@ -1,0 +1,37 @@
+#GlobalPlanner official intro: http://wiki.ros.org/global_planner
+
+#GlobalPlanner namespace
+GlobalPlanner:  
+  #Whether to use Dijkstra's algorithm for path planning. If false, then the A* algorithm will be selected for path planning.
+  use_dijkstra: true
+
+  #Whether to use the quadratic approximation method for calculation? If false, then we should use a simpler calculation method.
+  use_quadratic: true
+
+  #If for some reason you want global_planner to accurately reflect the behavior of navfn, set it to true (and use the default values ​​for the other boolean parameters).                                
+  old_navfn_behavior: false
+
+  #Whether publish potential cost map
+  publish_potential: true
+
+  #If true, create a path that follows the grid boundaries. If false, use gradient descent
+  use_grid_path: false
+
+  #permissible to traverse unknown areas of the cost map
+  allow_unknown:  true  
+
+  #The allowed deviation between the endpoint of the created path plan and the set target point, m.
+  default_tolerance: 0.0
+
+  #Whether potential area calculated using PointCloud2 be visualized
+  visualize_potential: false
+
+  lethal_cost: 253
+  neutral_cost: 50
+  cost_factor: 3.0
+  #How to set the orientation of each point 
+  orientation_mode: 0
+  #What window to use to determine the orientation based on the position derivative specified by the orientation mode
+  orientation_window_size: 1
+  #The global cost map is outlined using fully occupied squares. For global cost maps that are not static_maps (rolling_window), set to false.
+  outline_map: true

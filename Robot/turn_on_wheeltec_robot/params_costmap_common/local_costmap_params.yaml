@@ -1,0 +1,36 @@
+#Cost map official intro: http://wiki.ros.org/costmap_2d
+
+#Local cost map parameter namespace
+local_costmap:
+  #TF coordinate of the cost map
+  global_frame: map
+  #Robot TF coordinate
+  robot_base_frame: base_footprint
+  #How long after the TF coordinates between global_frame and robot_base_frame are no longer published will the robot stop being controlled, in seconds.
+  transform_tolerance: 0.5
+  #Cost map refresh rate, unit: Hz
+  update_frequency: 5.0
+  #Frequency of posts related to cost map visualization, in Hz
+  publish_frequency: 3.0
+
+  #Whether directly generate a cost map from a static map
+  #static_map: false #This parameter is invalid when manually configuring the cost map using plugins.
+  #Whether the cost map follows the robot's movement; this parameter must be false if static_map is true.
+  rolling_window: true
+  #Cost map width, unit: m
+  width: 4.0 
+  #Cost map height, unit: m
+  height: 4.0 
+  #Cost map resolution (meters/cell)
+  resolution: 0.05 
+
+  #To create a cost map, two layers are used: an obstacle layer and an expansion layer.
+  #Local cost dynamics requires high refresh rates, so static layers are not used to save computational resources.
+  plugins:
+    #Define the name of the map layer and set the type of the map layer.
+    - {name: obstacle_layer,      type: "costmap_2d::ObstacleLayer"}
+    #Define the name of the map layer and set the type of the map layer.
+    - {name: inflation_layer,     type: "costmap_2d::InflationLayer"}
+  #The parameters of each map layer will use the map layer name as the namespace.
+  #The parameters for each location's map layer will be set in the `costmap_common_params.yaml` file.
+

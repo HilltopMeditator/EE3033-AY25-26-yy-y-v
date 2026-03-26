@@ -1,0 +1,72 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="car_mode"  default="B585_balance" 
+       doc="opt: mini_akm,senior_akm,top_akm_bs,top_akm_dl,
+                 mini_mec,senior_mec_bs,senior_mec_dl,top_mec_bs,top_mec_dl,senior_mec_EightDrive,top_mec_EightDrive,
+                 flagship_mec_bs,flagship_mec_dl,
+                 mini_omni,senior_omni,top_omni,
+                 mini_4wd,senior_4wd_bs,senior_4wd_dl,top_4wd_bs,top_4wd_dl,flagship_4wd_bs,flagship_4wd_dl,
+                 mini_tank,mini_diff,senior_diff,four_wheel_diff_bs,four_wheel_diff_dl,flagship_four_wheel_diff_dl,flagship_four_wheel_diff_bs, 
+                 brushless_senior_diff, B585_balance
+                 mini_tank_moveit_four,mini_4wd_moveit_four,mini_mec_moveit_four,
+                 mini_mec_moveit_six,mini_4wd_moveit_six"/>
+
+  <!--Check if the model belongs to the AKM series; required within the voice navigation function-->
+  <param if="$(eval car_mode=='mini_akm' or car_mode=='senior_akm' or car_mode=='top_akm_bs' or car_mode=='top_akm_dl')" name="if_akm_yes_or_no" value="yes"/>
+  <param if="$(eval car_mode=='mini_mec_moveit_six' or car_mode=='mini_4wd_moveit_six')" name="if_six" value="yes"/>
+
+  <!--Whether to enable the navigation function. This is enabled in navigation-related files; disabled by default here.-->
+  <arg name="navigation"  default="false"/>
+  <arg name="pure3d_nav"  default="false"/>
+  <!--Whether to relaunch low-level nodes. This is enabled during voice-controlled autonomous mapping; it is disabled by default here.-->
+  <arg name="repeat"  default="false"/>
+  <arg name="if_voice" default="false"/>
+  <!--"Whether to use the Cartographer mapping algorithm. It is not used by default here.-->
+  <arg name="is_cartographer"  default="false"/>
+  <arg name="odom_frame_id"  default="odom_combined"/>
+
+  <group unless="$(eval (car_mode=='mini_mec_moveit_six' or car_mode=='mini_4wd_moveit_six') and if_voice==true)" >
+  <!-- turn on base_serial -->
+  <include file="$(find turn_on_wheeltec_robot)/launch/include/base_serial.launch" unless="$(arg repeat)">
+    <arg name="odom_frame_id"  value="$(arg odom_frame_id)"/>
+  </include>
+  </group>
+
+  <group if="$(eval (car_mode=='mini_mec_moveit_six' or car_mode=='mini_4wd_moveit_six') and if_voice==true)" >
+  <!-- Launch voice-related nodes for the robotic arm -->
+  <include file="$(find wheeltec_arm_pick)/launch/base_serial.launch" >
+    <arg name="if_voice_control" value="true"/>
+    <arg name="moveit_config" value="true"/>
+    <arg name="preset" value="true"/>
+  </include>
+  </group>
+   
+
+  <!--Enable navigation algorithm selection when the navigation function is turned on-->
+  <!--When 2D or 3D navigation functions are enabled, enable the teb_local_planner navigation algorithm; it performs better compared to the DWA algorithm.-->
+  <!-- <include file="$(find turn_on_wheeltec_robot)/launch/include/teb_local_planner.launch" if="$(arg navigation)"> -->
+  <!-- Enable dwa_local_planner navigation algorithm-->
+  <include file="$(find turn_on_wheeltec_robot)/launch/include/dwa_local_planner.launch" if="$(arg navigation)"> 
+    <arg name="car_mode" value="$(arg car_mode)"/>
+  </include>
+
+  <!--When pure visual navigation is enabled, enable the teb_local_planner navigation algorithm; it performs better compared to the DWA algorithm.-->
+  <include file="$(find turn_on_wheeltec_robot)/launch/include/teb_local_planner_pure3d.launch" if="$(arg pure3d_nav)">
+  <!-- Enable dwa_local_planner navigation algorithm-->
+  <!-- <include file="$(find turn_on_wheeltec_robot)/launch/include/dwa_local_planner_pure3d.launch" if="$(arg pure3d_nav)"> -->
+    <arg name="car_mode" value="$(arg car_mode)"/>
+  </include>
+
+  <!-- Publish TF relationships for mapping and navigation, and visualize the robot's appearance -->
+  <include file="$(find turn_on_wheeltec_robot)/launch/robot_model_visualization.launch" unless="$(arg repeat)">
+    <arg name="car_mode" value="$(arg car_mode)"/>
+    <arg name="if_voice" value="$(arg if_voice)"/>
+  </include>
+
+  <!-- The extended Kalman filter publishes the dodom_combined TF to the car localization. Not used when using the cartographer algorithm.-->
+  <include file="$(find turn_on_wheeltec_robot)/launch/include/robot_pose_ekf.launch" unless="$(arg repeat)">
+    <arg name="is_cartographer" value="$(arg is_cartographer)"/>
+  </include>
+ </launch>
+
+

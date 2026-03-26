@@ -1,0 +1,160 @@
+<?xml version = "1.0" ?>
+<robot name = "wheeltec" xmlns:xacro ="http://ros.org/wiki/xacro" >
+	<xacro:include filename="$(find turn_on_wheeltec_robot)/urdf/meshes/material.xacro" />
+
+	<link name = "base_link">
+		<visual>
+			<geometry>
+				<box size = "0.05 0.157 0.2"/> 
+				<!-- <mesh filename = "package://turn_on_wheeltec_robot/urdf/meshes/Assem_No_wheelTiny.dae" scale = "0.001 0.001 0.001" /> -->
+				<!-- <mesh filename ="package://turn_on_wheeltec_robot/urdf/meshes/Assem2_No_Wheel.STL"/> -->
+			</geometry>
+			<!-- <origin xyz=" 0.08 0 0.04" rpy="0 0 0" /> -->
+			<origin xyz ="0.00 0.0 0.1" rpy = "0 0 0" />
+			<material name="white">
+                <color rgba="1 1 1 1"/>
+            </material>
+		</visual>
+	</link>
+
+	<link name = "right_wheel_link">
+		<inertial>
+			<origin xyz = "0.0 0.0185 0" rpy = "0 0 0" />
+			<mass value ="0.03770"/>
+			<inertia ixx ="0.000096758" ixz = "0.0" iyy = "0.000068429" iyz = "0.0000" ixy = "0.0" izz = "0.000096758"/>
+		</inertial>
+		<collision>
+			<geometry>
+				<cylinder radius="0.0316" length ="0.037"/>
+			</geometry>
+			<origin rpy = "1.5708 0 0" xyz = "0 0.0150 0"/>
+			<!--
+			<origin rpy = "0 0 0" xyz = "0 0.1100 0.0316"/> -->
+			
+
+		</collision>
+		<visual>
+			<geometry>
+				<cylinder radius="0.0316" length ="0.037"/>
+			</geometry>
+			
+			<!-- <origin rpy = "1.5708 0 0" xyz = "0 0.0150 0"/>  -->
+			<origin xyz="0 0 0" rpy="0 0 0" />
+		</visual>
+	</link>
+	<joint name ="right_wheel_Joint" type = "continuous">
+		<parent link = "base_link"/>
+		<child link = "right_wheel_link"/>
+		<!-- <origin xyz = "-0.0135 0.0875 -0.0785" rpy ="0 0 0.0"/> -->
+		<origin xyz="0 0.08 0.0325" rpy="1.57 0 0"/>
+		<limit effort="100000" velocity="100000"/>
+        <axis xyz="0 1 0"/>
+	</joint>
+	<link name = "left_wheel_link">
+		<inertial>
+			<origin xyz = "0.0 0.0185 0" rpy = "0 0 0" />
+			<mass value ="0.03770"/>
+			<inertia ixx ="0.000096758" ixz = "0.0" iyy = "0.000068429" iyz = "0.0000" ixy = "0.0" izz = "0.000096758"/>
+		</inertial>
+		<collision>
+			<geometry>
+				<cylinder radius="0.0316" length ="0.037"/>
+			</geometry>
+			<origin rpy = "1.5708 0 0" xyz = "0 -0.015 0"/>
+		</collision>
+		<visual>
+			<geometry>
+				<cylinder radius="0.0316" length ="0.037"/>
+			</geometry>
+			
+			<!-- <origin rpy = "1.5708 0 0" xyz = "0 -0.015 0"/> -->
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			
+		</visual>
+	</link>
+	<joint name ="left_wheel_Joint" type = "continuous">
+		<parent link = "base_link"/>
+		<child link = "left_wheel_link"/>
+		<!-- <origin xyz = "-0.016 -0.0875 -0.0785" rpy ="0 0 0.0"/> -->
+		<origin xyz="0 -0.08 0.0325" rpy="1.57 0 0"/>
+		<limit effort="100000" velocity="100000"/>
+        <axis xyz="0 1 0"/>
+	</joint>
+	<!--fdfjdsf-->
+<!-- 	<gazebo>
+		<plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
+			<commandTopic>cmd_vel2</commandTopic>
+			<odometryTopic>odom</odometryTopic>
+			<odometryFrame>odom</odometryFrame>
+			<odometryRate>20.0</odometryRate>
+			<robotBaseFrame>base_footprint</robotBaseFrame>
+		</plugin>
+	</gazebo> 
+	<gazebo reference= "Left_Wheel" >
+		<mu1>0.90</mu1>
+		<mu2>0.65</mu2>
+		<kp>1000</kp>
+		<kd>10</kd>
+		<material>Gazebo/Black</material>
+	</gazebo>
+	<gazebo reference= "Right_Wheel" >
+		<mu1>0.90</mu1>
+		<mu2>0.65</mu2>
+		<kp>1000</kp>
+		<kd>10</kd>
+		<material>Gazebo/Black</material>
+	</gazebo>
+ <gazebo> 
+    	<plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+      	<legacyMode>false</legacyMode>
+      	<alwaysOn>true</alwaysOn>
+      	<updateRate>10</updateRate>
+      	<leftJoint>Left_wheel_Joint</leftJoint>
+      	<rightJoint>Right_wheel_Joint</rightJoint>
+      	<wheelSeparation>0.175</wheelSeparation>
+      	<wheelDiameter>0.0632</wheelDiameter>
+      	<torque>10</torque>
+      	<commandTopic>cmd_vel</commandTopic>
+      	<odometryTopic>odom</odometryTopic>
+      	<odometryFrame>odom</odometryFrame>
+      	<robotBaseFrame>base_footprint</robotBaseFrame>
+
+    </plugin>
+  </gazebo>
+
+
+	<gazebo>
+		<plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
+			<alwaysOn>true</alwaysOn>
+			<bodyName>Chassis</bodyName>
+			<topicName>imu</topicName>
+			<serviceName>imu_service</serviceName>
+			<gaussianNoise>0.0</gaussianNoise>
+			<rpyOffsets>0 0 0</rpyOffsets>
+			<accelDrift>0.5 0.5 0.5</accelDrift>
+			<accelGaussianNoise>0.35 0.35 0.3</accelGaussianNoise>
+			<rateDrift>0.0 0.0 0.0</rateDrift>
+        	<rateGaussianNoise>0.00 0.00 0.00</rateGaussianNoise>
+        	<headingDrift>0.0</headingDrift>
+        	<headingGaussianNoise>0.00</headingGaussianNoise>
+			<updateRate>00</updateRate>
+		</plugin>
+	</gazebo> -->
+	<!--<gazebo>
+		<plugin name="quadrotor_imu_sim" filename="libhector_gazebo_ros_imu.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>100.0</updateRate>
+        <bodyName>base_footprint</bodyName>
+        <frameId>ardrone_base_link</frameId>
+        <topicName>/ardrone/imu</topicName>
+        <rpyOffsets>0 0 0</rpyOffsets> 
+        <gaussianNoise>0</gaussianNoise> 
+        <accelDrift>0.5 0.5 0.5</accelDrift>
+        <accelGaussianNoise>0.35 0.35 0.3</accelGaussianNoise>
+        <rateDrift>0.0 0.0 0.0</rateDrift>
+        <rateGaussianNoise>0.00 0.00 0.00</rateGaussianNoise>
+        <headingDrift>0.0</headingDrift>
+        <headingGaussianNoise>0.00</headingGaussianNoise>
+      </plugin>
+  </gazebo> -->
+</robot>

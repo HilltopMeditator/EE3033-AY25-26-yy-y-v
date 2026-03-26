@@ -1,0 +1,31 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="car_mode"  default="" />
+
+  <!-- Shared parameters for navigation planning  -->
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_nav_common/move_base_params.yaml"          command="load" ns="move_base"/>
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_nav_common/base_global_planner_param.yaml" command="load" ns="move_base"/>
+
+  <!-- DWA navigation Local Path Planner Parameters -->
+  <param name="move_base/base_local_planner"    type="string" value="dwa_local_planner/DWAPlannerROS"/>
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_nav_common/dwa_local_planner_params.yaml"  command="load" ns="move_base"/>
+
+  <!-- Shared parameters for Navigation Cost Map -->
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_common/costmap_common_params.yaml"     command="load" ns="move_base/global_costmap"/>
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_common/costmap_common_params.yaml"     command="load" ns="move_base/local_costmap"/>
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_common/local_costmap_params.yaml"      command="load" ns="move_base"/>
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_common/global_costmap_params.yaml"     command="load" ns="move_base"/>
+
+  <!-- Start navigation node -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <!-- Corresponding car for navigation cost map -->
+    <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_car/param_$(arg car_mode)/costmap_car_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_car/param_$(arg car_mode)/costmap_car_params.yaml" command="load" ns="local_costmap" />
+  </node>
+  
+</launch>
+
+
+
+

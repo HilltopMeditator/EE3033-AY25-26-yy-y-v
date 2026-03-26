@@ -1,0 +1,32 @@
+<launch>
+
+  <!-- Arguments -->
+  <arg name="car_mode"  default="" />
+
+  <!-- Shared parameters for navigation planning -->
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_nav_common/move_base_params.yaml"          command="load" ns="move_base"/>
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_nav_common/base_global_planner_param.yaml" command="load" ns="move_base"/>
+
+  <!-- Navigation TEB Local Path Planner Parameters -->
+  <param name="move_base/base_local_planner"    type="string" value="teb_local_planner/TebLocalPlannerROS"/>
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_nav_common/teb_local_planner_params.yaml"  command="load" ns="move_base"/>
+
+  <!-- Shared parameters for Navigation Cost Map -->
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_common/costmap_common_params_pure3d.yaml"     command="load" ns="move_base/global_costmap"/>
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_common/costmap_common_params_pure3d.yaml"     command="load" ns="move_base/local_costmap"/>
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_common/local_costmap_params.yaml"      command="load" ns="move_base"/>
+  <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_common/global_costmap_params.yaml"     command="load" ns="move_base"/>
+
+  <!-- Start navigation node -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <!-- global map --> 
+    <remap from="map" to="/rtabmap/grid_map"/>
+    <!-- Navigation cost map and route planner corresponding vehicle parameters -->
+    <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_car/param_$(arg car_mode)/teb_local_planner_params.yaml"  command="load"/>
+    <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_car/param_$(arg car_mode)/costmap_car_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find turn_on_wheeltec_robot)/params_costmap_car/param_$(arg car_mode)/costmap_car_params.yaml" command="load" ns="local_costmap" />
+  </node>
+  
+</launch>
+
+

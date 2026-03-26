@@ -1,0 +1,89 @@
+#Cost map official intro: http://wiki.ros.org/costmap_2d
+#Static map official intro: http://wiki.ros.org/costmap_2d/hydro/staticmap
+#Obstacle official intro: http://wiki.ros.org/costmap_2d/hydro/obstacles
+
+#static map parameters
+static_layer:
+  #Enable static map
+  enabled: true
+  #Static map topic
+  map_topic: map
+  #What data value in the map topic will be converted into an unknown area in the static layer cost map
+  unknown_cost_value: -1
+  #What data value in the map topic will be converted into the fully occupied area in the static layer cost map?
+  lethal_cost_threshold: 100
+  #Only the map data subscribed to the first time be converted into a static layer cost map, ignoring subsequent subscribed map data
+  first_map_only: false
+  #Whether to subscribe to the topic “map_topic”+“_updates”
+  subscribe_to_updates: false
+  #If set to false, unknown areas in the map topic will be converted into free areas in the cost map.
+  track_unknown_space: true
+  #If set to true, the static layer cost map only has three cases: unknown, free, and fully occupied.
+  #If set to false, the static layer cost map can have different levels of occupancy.
+  trinary_costmap: true
+
+
+#Set obstacle layer parameters
+obstacle_layer:
+  #obstacle layer
+  enabled: true
+  #obstacle layer observation source name can be set to multiple observation sources at once: scan, scan2, camera.
+  observation_sources: scan
+  #Set the corresponding observation source parameters
+  scan:
+    #Observation source data topic name
+    topic: scan
+    #If the TF coordinate name of the observation source is set to empty, the TF coordinate name will be automatically found from the topic data.
+    #The following three data formats support automatic finding of TF coordinate names.
+    #sensor_msgs/LaserScan, sensor_msgs/PointCloud, and sensor_msgs/PointCloud2
+    sensor_frame: laser
+    #The data format for observing source topics can be LaserScan, PointCloud, or PointCloud2.
+    data_type: LaserScan
+    #The duration for which all topic data within a given time period is retained as input to the barrier layer. Setting it to 0 means only the most recent frame of data is retained. The unit is seconds (s).
+    observation_persistence: 0.0
+    #This setting determines the frequency at which topics from the observation source are read. If configured, the frequency should be set lower than the sensor frequency. The default value is 0, meaning the observation source is allowed to remain silent and not publish topics. Unit: Hz
+    expected_update_rate: 0.0
+    #Whether this observation source is used to clear free space
+    clearing: true
+    #Whether this observation source is used to add obstacles
+    marking: true
+    #Obstacles above a certain height are excluded from the observation range, in meters (m).
+    max_obstacle_height: 2.0
+    #Obstacles below a certain height are excluded from the observation range, in meters (m).
+    min_obstacle_height: 0.0
+    #Obstacles within a certain range will be added to the cost map, in meters (m)
+    obstacle_range: 2.5
+    #Obstacles within a certain range will be tracked, in meters (m)
+    raytrace_range: 3.0
+
+  #Parameters are set again based on the observation source.
+  #Obstacles above a certain height are excluded from the observation range, in meters (m).
+  max_obstacle_height:  2.0
+  #Obstacles within a certain range will be added to the cost map, in meters (m)
+  obstacle_range: 2.5
+  #Obstacles within a certain range will be tracked, in meters (m)
+  raytrace_range: 3.0
+
+  #If set to true, the obstacle layer cost map will have three scenarios: unknown, free, and fully occupied.
+  #If set to false, the obstacle layer cost map only has two cases: free and fully occupied.
+  track_unknown_space: true
+  #How the obstacle layer is handled in relation to other map layers.
+  #0: Obstacle layers cover other map layers; 1: Obstacle maximization method, where occupied squares in one layer cover free squares in other layers. This is the most commonly used method.
+  #99: Without changing other map layers, the method should be to make the obstacle layers ineffective.
+  combination_method: 1
+
+  #If the barrier layer type is "costmap_2d::VoxelLayer", the following parameters can be set.
+  #The height of the cost map
+  #origin_z: 0.0
+  #The height of the Z-axis grid of the barrier layer
+  #z_resolution: 0.2
+  #There are several squares on the Z-axis of the barrier layer.
+  #z_voxels: 10
+  #The number of unknown cells allowed in a column considered "known".
+  #unknown_threshold: 15
+  #The number of labeled cells allowed in a column considered "free".
+  #mark_threshold: 0
+  #Should the topic of the obstacle layer projection map layer be published?
+  #publish_voxel_map: false
+  #If set to true, the robot will mark the space it traverses as a free zone.
+  #footprint_clearing_enabled: true

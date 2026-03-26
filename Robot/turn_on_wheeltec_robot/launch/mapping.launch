@@ -1,0 +1,60 @@
+
+<launch>
+  <arg name="mapping_mode"  default="gmapping" doc="opt: gmapping,hector,cartographer,karto"/>
+  
+  <!-- Enable navigation during map creation. Navigation is disabled by default and only enabled during RRT's custom map creation.-->
+  <arg name="navigation" default="false"/>
+  <arg name="odom_frame_id"  default="odom_combined"/>
+
+  <!-- turn on lidar  -->
+  <include file="$(find turn_on_wheeltec_robot)/launch/wheeltec_lidar.launch" />
+
+  <!-- enable save map -->
+  <node pkg="world_canvas_msgs" type="save" name="save_map" />
+
+  <!-- enable gmapping algorithm  -->
+  <group if="$(eval mapping_mode == 'gmapping')">
+  <include file="$(find turn_on_wheeltec_robot)/launch/include/algorithm_gmapping.launch" />
+  <!-- enable robot low-level nodes  -->
+  <include file="$(find turn_on_wheeltec_robot)/launch/turn_on_wheeltec_robot.launch">
+    <arg name="navigation" value="$(arg navigation)"/>
+    <arg name="is_cartographer" value="false"/>
+    <arg name="odom_frame_id"   value="$(arg odom_frame_id)"/>
+  </include>
+  </group>
+
+  <!-- enable hector mapping algorithm  -->
+  <group if="$(eval mapping_mode == 'hector')">
+  <include file="$(find turn_on_wheeltec_robot)/launch/include/algorithm_hector.launch" />
+  <!-- enable robot low-level nodes  -->
+  <include file="$(find turn_on_wheeltec_robot)/launch/turn_on_wheeltec_robot.launch">
+    <arg name="navigation" value="$(arg navigation)"/>
+    <arg name="is_cartographer" value="false"/>
+    <arg name="odom_frame_id"   value="$(arg odom_frame_id)"/>
+  </include>
+  </group> 
+
+   <!-- enable karto mapping algorithm  -->
+  <group if="$(eval mapping_mode == 'karto')">
+  <include file="$(find turn_on_wheeltec_robot)/launch/include/algorithm_karto.launch" />
+  <!-- enable robot low-level nodes  -->
+  <include file="$(find turn_on_wheeltec_robot)/launch/turn_on_wheeltec_robot.launch">
+    <arg name="navigation" value="$(arg navigation)"/>
+    <arg name="is_cartographer" value="false"/>
+    <arg name="odom_frame_id"   value="$(arg odom_frame_id)"/>
+  </include>
+  </group>  
+
+   <!-- enable cartographer mapping algorithm  -->
+  <group if="$(eval mapping_mode == 'cartographer')">
+  <!--path of this function：/opt/ros/melodic/share/cartographer_ros-->
+  <include file="$(find cartographer_ros)/launch/2d_online.launch" />
+  <!-- enable robot low-level nodes  -->
+  <include file="$(find turn_on_wheeltec_robot)/launch/turn_on_wheeltec_robot.launch">
+    <arg name="navigation" value="$(arg navigation)"/>
+    <arg name="is_cartographer" value="true"/>
+    <arg name="odom_frame_id"   value="$(arg odom_frame_id)"/>
+  </include>
+  </group>  
+
+</launch>

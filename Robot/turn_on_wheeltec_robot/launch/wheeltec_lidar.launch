@@ -1,0 +1,119 @@
+<launch>
+    <arg name="rplidar_mode"  default="ls_N10" 
+    doc="opt:  ls_M10_uart, ls_M10P_uart, ls_M10_net, ls_M10P_net, ls_N10, ld_14, ld_19, rplidar_A1_A2, rplidar_A3, rplidar_S1"/>
+
+    <!-- Lidar parameters of LeiShen M10 -->
+    <param name="/m10/truncated_mode" value="0"/>    <!--0: No filtering used 1: Filtering used-->
+    <param name="/m10/min_distance" type="double" value="0"/> <!--Minimum scanning distance-->
+    <param name="/m10/max_distance" type="double" value="30"/> <!--Maximum scanning distance-->
+    <rosparam param="/m10/disable_min">[110]</rosparam> <!--Left angle-->
+    <rosparam param="/m10/disable_max">[250]</rosparam> <!--Right angle-->
+    <!-- Lidar parameters of LeiShen M10 -->
+
+    <!-- Lidar parameters of LeiShen N10 -->
+    <param name="/lsn10/truncated_mode" value="0"/>    <!--0: No filtering used 1: Filtering used-->
+    <param name="/lsn10/min_distance" type="double" value="0"/> <!--Minimum scanning distance-->
+    <param name="/lsn10/max_distance" type="double" value="30"/> <!--Maximum scanning distance-->
+    <rosparam param="/lsn10/disable_min">[110]</rosparam> <!--Left angle-->
+    <rosparam param="/lsn10/disable_max">[250]</rosparam> <!--Right angle-->
+    <!-- Lidar parameters of LeiShen N10 -->
+
+    <!-- LD-14 Lidar parameters -->
+    <!-- angle1_start: Starting value of shielding angle; angle1_end: Ending value of shielding angle. 
+    Non-zero, 0°~360° by default -->
+    <param name="/LD14/flag_parted" type="bool" value="false"/>   <!--false: Do not shield angles, true: shield angles-->
+    <!--Example: disable_min=[40,90]  disable_max=[50,120] means shielding 40°~50°, 90°~120° intervals-->
+    <rosparam param="/LD14/disable_min">[120]</rosparam> <!--Left angle-->
+    <rosparam param="/LD14/disable_max">[240]</rosparam> <!--Right angle-->
+    <!-- LD-14 Lidar parameters -->
+
+    <!-- LD-19 Lidar parameters-->
+    <!-- angle1_start: Starting value of shielding angle; angle1_end: Ending value of shielding angle. 
+    Non-zero, 0°~360° by default -->
+    <param name="/LD19/flag_parted" type="bool" value="false"/>   <!--false: Do not shield angles, true: shield angles-->
+    <!--Example: disable_min=[40,90]  disable_max=[50,120] means shielding 40°~50°, 90°~120° intervals-->
+    <rosparam param="/LD19/disable_min">[120]</rosparam> <!--Left angle-->
+    <rosparam param="/LD19/disable_max">[240]</rosparam> <!--Right angle-->
+    <!-- LD-19 Lidar parameters-->
+
+    <!-- Slamtec Lidar parameters -->
+    <!-- Single angle partition -->
+    <param name="/rplidarNode/angle_start"         type="double" value="0"  />   <!-- Scanning start angle-->
+    <param name="/rplidarNode/angle_end"           type="double" value="360"/>   <!-- Scanning end angle-->
+    <!-- <param name="/rplidarNode/angle_start"         type="double" value="270"/> -->   <!-- A1_moveit Scanning start angle-->
+    <!-- <param name="/rplidarNode/angle_end"           type="double" value="90"/>  -->   <!-- A1_moveit Scanning end angle-->
+    <!--<param name="/rplidarNode/angle_start"         type="double" value="315"/>-->   <!-- A2_moveit Scanning start angle-->
+    <!--<param name="/rplidarNode/angle_end"           type="double" value="135"/>-->   <!-- A2_moveit Scanning end angle-->
+    <!--<param name="/rplidarNode/angle_start"         type="double" value="250"/>-->   <!-- Service Robot Scanning start angle-->
+    <!--<param name="/rplidarNode/angle_end"           type="double" value="110"/>-->   <!-- Service Robot Scanning end angle-->
+    <param name="/rplidarNode/distance_min"        type="double" value="0"  /> <!-- Minimum scanning distance-->
+    <param name="/rplidarNode/distance_max"        type="double" value="30" /> <!-- Maximum scanning distance-->
+    <!--Angle partition-->
+    <param name="/rplidarNode/is_parted"           type="bool"   value="false"/> <!--Parted or not-->
+    <param name="/rplidarNode/angle1_start"        type="double" value="50"/> <!--1st shielding angle start-->
+    <param name="/rplidarNode/angle1_end"          type="double" value="70"/> <!--1st shielding angle end-->
+    <param name="/rplidarNode/angle2_start"        type="double" value="120"/> <!--2nd shielding angle start--> 
+    <param name="/rplidarNode/angle2_end"          type="double" value="240"/> <!--2nd shielding angle end--> 
+    <param name="/rplidarNode/angle3_start"        type="double" value="290"/> <!--3rd shielding angle start-->
+    <param name="/rplidarNode/angle3_end"          type="double" value="310"/> <!--3rd shielding angle end-->
+    <param name="/rplidarNode/angle4_start"        type="double" value="0"/> <!--4th shielding angle start-->
+    <param name="/rplidarNode/angle4_end"          type="double" value="0"/> <!--4th shielding angle end-->  
+    <!-- Slamtec Lidar parameters -->
+   
+    <!--  Start LeiShen N10 Lidar -->
+    <group if="$(eval rplidar_mode == 'ls_N10')">
+        <include file="$(find lsn10)/launch/lsn10.launch"/>
+    </group>
+
+    <!--  Start LD-14 Lidar -->
+    <group if="$(eval rplidar_mode == 'ld_14')">
+        <include file="$(find ldlidar_14)/launch/ld14.launch"/>
+    </group>
+
+    <!--  Start LD-19 Lidar -->
+    <group if="$(eval rplidar_mode == 'ld_19')">
+        <include file="$(find ldlidar_19)/launch/ld19.launch"/>
+    </group>
+
+    <!--  Start Slamtec A1/A2 Lidar -->
+    <group if="$(eval rplidar_mode == 'rplidar_A1_A2')">
+        <include file="$(find rplidar_ros)/launch/rplidar.launch"/>
+    </group>
+
+    <!--  Start Slamtec A3 Lidar -->
+    <group if="$(eval rplidar_mode == 'rplidar_A3')">
+        <include file="$(find rplidar_ros)/launch/rplidar_a3.launch"/>
+    </group>
+
+    <!--  Start Slamtec S1 Lidar -->
+    <group if="$(eval rplidar_mode == 'rplidar_S1')">
+        <include file="$(find rplidar_ros)/launch/rplidar_s1.launch"/>
+    </group>
+
+    <!--  Start Leishen M10_uart Lidar -->
+    <group if="$(eval rplidar_mode == 'ls_M10_uart')">
+        <include file="$(find lsm10_v2)/launch/lsm10_v2.launch"/>
+	<param name="/lsm10_v2/versions" value="1"/>
+    </group>
+
+    <!--  Start Leishen M10P_uart Lidar -->
+    <group if="$(eval rplidar_mode == 'ls_M10P_uart')">
+        <include file="$(find lsm10_v2)/launch/lsm10_v2.launch"/>
+	<param name="/lsm10_v2/versions" value="2"/>
+    </group>
+
+    <!--  Start Leishen M10_net Lidar -->
+    <group if="$(eval rplidar_mode == 'ls_M10_net')">
+        <include file="$(find lslidar_m10_decoder)/launch/lslidar_m10.launch"/>
+	<param name="/lslidar_m10_driver_node/versions" value="1"/>
+	<param name="/lslidar_m10_decoder_node/versions" value="1"/>
+    </group>
+
+    <!--  Start Leishen M10P_net Lidar -->
+    <group if="$(eval rplidar_mode == 'ls_M10P_net')">
+        <include file="$(find lslidar_m10_decoder)/launch/lslidar_m10.launch"/>
+	<param name="/lslidar_m10_driver_node/versions" value="2"/>
+	<param name="/lslidar_m10_decoder_node/versions" value="2"/>
+    </group>
+
+</launch>
