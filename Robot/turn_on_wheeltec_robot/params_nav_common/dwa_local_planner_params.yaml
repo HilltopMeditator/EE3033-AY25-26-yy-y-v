@@ -3,18 +3,18 @@
 #Local path planner DWAPlannerROS namespace
 DWAPlannerROS:
   #Robot parameter settings
-  max_vel_x: 0.45         #The absolute value of the maximum linear velocity in the x-direction, in m/s.
-  min_vel_x: 0            #The absolute value of the minimum linear velocity in the x-direction; a negative number indicates that backward movement is possible; unit: m/s.
+  max_vel_x: 0.50         #The absolute value of the maximum linear velocity in the x-direction, in m/s.
+  min_vel_x: -0.50        #The absolute value of the minimum linear velocity in the x-direction; a negative number indicates that backward movement is possible; unit: m/s.
   max_vel_y: 0.0          #The absolute value of the maximum linear velocity in the y-direction, in m/s. 0 for non-omnidirectional mobile robots.  
   min_vel_y: 0.0          #The absolute value of the minimum linear velocity in the y-direction, in m/s. 0 for non-omnidirectional mobile robots.
   max_vel_trans: 0.5      #The absolute value of the robot's maximum moving speed, in m/s.
   min_vel_trans: 0.1      #The absolute value of the robot's minimum moving speed, in m/s.
   trans_stopped_vel: 0.1  #The translational velocity at which the robot is considered to be in a "stopped" state. If the robot's velocity is lower than this value, the robot is considered to have stopped. The unit is m/s.
-  max_vel_theta: 0.7      #The absolute value of the robot's maximum rotational angular velocity, in rad/s.
+  max_vel_theta: 1.67     #The absolute value of the robot's maximum rotational angular velocity, in rad/s.
   min_vel_theta: 0.3      #The absolute value of the robot's minimum rotational angular velocity, in rad/s.
-  theta_stopped_vel : 0.4 #The rotational speed of the robot when it is considered to be in a "stopped" state. The unit is rad/s.
-  acc_lim_x: 0.5          #The robot's maximum acceleration in the x-direction, in m/s².
-  acc_lim_theta: 3.5      #The robot's maximum rotational acceleration is measured in m/s².
+  theta_stopped_vel: 0.4 #The rotational speed of the robot when it is considered to be in a "stopped" state. The unit is rad/s.
+  acc_lim_x: 2.0          #The robot's maximum acceleration in the x-direction, in m/s².
+  acc_lim_theta: 3      #The robot's maximum rotational acceleration is measured in m/s².
   acc_lim_y: 0.0          #The robot's limiting acceleration in the y-direction, measured in m/s². For non-omnidirectional mobile robots, it is 0.
 
   #Target point error allowable value目标点误差允许值

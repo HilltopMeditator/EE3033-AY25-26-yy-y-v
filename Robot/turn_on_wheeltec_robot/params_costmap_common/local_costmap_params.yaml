@@ -9,7 +9,7 @@ local_costmap:
   #How long after the TF coordinates between global_frame and robot_base_frame are no longer published will the robot stop being controlled, in seconds.
   transform_tolerance: 0.5
   #Cost map refresh rate, unit: Hz
-  update_frequency: 5.0
+  update_frequency: 10.0
   #Frequency of posts related to cost map visualization, in Hz
   publish_frequency: 3.0
 
