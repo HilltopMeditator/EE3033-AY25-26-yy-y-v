@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import rospy
 import smach
 import roslaunch
@@ -13,16 +14,37 @@ if sys.version_info.major < 3:
 # Global variable to track the currently active roslaunch process
 current_active_launch = None
 
+def brute_force_cleanup(launch_obj, target_keywords):
+    """
+    Attempts a polite shutdown, then escalates to pkill for stubborn nodes.
+    """
+    if launch_obj is not None:
+        rospy.loginfo("Attempting polite ROS shutdown (SIGINT)...")
+        launch_obj.shutdown()
+        rospy.sleep(2.0) 
+
+    rospy.logwarn("Escalating to OS-level SIGKILL for stubborn processes...")
+    for keyword in target_keywords:
+        os.system('pkill -9 -f "{}" > /dev/null 2>&1'.format(keyword))
+        
+    rospy.loginfo("Force cleanup complete.")
+
+
 def shutdown_hook():
-    """Triggered automatically when the node is killed (e.g., via Ctrl+C)"""
+    """Triggered automatically when the script is killed (e.g., via Ctrl+C)"""
     global current_active_launch
-    rospy.logwarn("\n[SHUTDOWN] Kill signal received. Cleaning up background processes...")
-    if current_active_launch is not None:
-        rospy.loginfo("[SHUTDOWN] Shutting down active roslaunch nodes...")
-        current_active_launch.shutdown()
-        rospy.loginfo("[SHUTDOWN] Cleanup complete. Exiting gracefully.")
-    else:
-        rospy.loginfo("[SHUTDOWN] No active processes to clean up.")
+    rospy.logwarn("\n[SHUTDOWN] Emergency kill signal received. Wiping all active nodes...")
+    
+    # Target anything related to mapping or navigation
+    targets = ['mapping.launch', 'navigation.launch', 'slam_gmapping', 'amcl', 'move_base', 'rviz']
+    brute_force_cleanup(current_active_launch, targets)
+    
+    rospy.loginfo("[SHUTDOWN] Exiting Python interpreter forcefully.")
+    
+    # THE NUCLEAR OPTION: Instantly kill the Python script and all its threads, 
+    # breaking out of rospy.spin() safely.
+    os._exit(0)
+
 
 class LaunchMapping(smach.State):
     def __init__(self):
@@ -35,13 +57,18 @@ class LaunchMapping(smach.State):
         rospy.loginfo("=== STATE: MAPPING ===")
         path = roslaunch.rlutil.resolve_launch_arguments(['turn_on_wheeltec_robot', 'mapping.launch'])[0]
         
-        # Track this launch process globally
         current_active_launch = roslaunch.parent.ROSLaunchParent(self.uuid, [path])
         current_active_launch.start()
         
-        input("\n[ACTION REQUIRED] Mapping active. Drive the robot around to map the area.\nPress [Enter] when ready to save the map...\n")
+        # Wrap input in a try-except to catch Ctrl+C during the prompt
+        try:
+            input("\n[ACTION REQUIRED] Mapping active. Drive the robot around.\nPress [Enter] when ready to save the map...\n")
+        except KeyboardInterrupt:
+            rospy.signal_shutdown("User pressed Ctrl+C during mapping.")
+            return 'done'
         
         return 'done'
+
 
 class SaveAndKill(smach.State):
     def __init__(self):
@@ -50,6 +77,9 @@ class SaveAndKill(smach.State):
     def execute(self, userdata):
         global current_active_launch
         
+        if rospy.is_shutdown():
+            return 'success'
+
         rospy.loginfo("=== STATE: SAVE_MAP ===")
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         path = roslaunch.rlutil.resolve_launch_arguments(['turn_on_wheeltec_robot', 'map_saver.launch'])[0]
@@ -60,16 +90,14 @@ class SaveAndKill(smach.State):
         
         rospy.sleep(5) 
         
-        rospy.loginfo("Map saved. Shutting down mapping nodes to free up the TF tree...")
-        if current_active_launch is not None:
-            current_active_launch.shutdown()
-            current_active_launch = None  # Clear tracking after shutdown
-        else:
-            rospy.logwarn("No active mapping launch found to shut down!")
+        rospy.loginfo("Map saved. Initiating aggressive teardown of mapping nodes...")
+        brute_force_cleanup(current_active_launch, ['mapping.launch', 'slam_gmapping'])
+        current_active_launch = None 
             
         rospy.sleep(3) 
         
         return 'success'
+
 
 class LaunchNavigation(smach.State):
     def __init__(self):
@@ -78,11 +106,13 @@ class LaunchNavigation(smach.State):
     def execute(self, userdata):
         global current_active_launch
         
+        if rospy.is_shutdown():
+            return 'ready'
+
         rospy.loginfo("=== STATE: NAVIGATION ===")
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         path = roslaunch.rlutil.resolve_launch_arguments(['turn_on_wheeltec_robot', 'navigation.launch'])[0]
         
-        # Track the new navigation launch process globally
         current_active_launch = roslaunch.parent.ROSLaunchParent(uuid, [path])
         
         rospy.loginfo("Starting AMCL and MoveBase...")
@@ -91,15 +121,16 @@ class LaunchNavigation(smach.State):
         rospy.loginfo("\n>>> Navigation active. AMCL has taken over the map->odom transform. <<<")
         rospy.loginfo("Keep this terminal open to keep navigation running. Press Ctrl+C to exit.")
         
-        rospy.spin() 
+        # Restored standard rospy.spin() behavior
+        rospy.spin()
         
         return 'ready'
+
 
 def main():
     rospy.init_node('smach_handoff_test', log_level=rospy.INFO)
     roslaunch.rlutil.get_or_generate_uuid(None, True)
 
-    # Register the shutdown hook immediately after init_node
     rospy.on_shutdown(shutdown_hook)
 
     sm = smach.StateMachine(outcomes=['test_complete'])
@@ -115,7 +146,12 @@ def main():
                                transitions={'ready':'test_complete'})
 
     rospy.loginfo("Starting SMACH Orchestrator...")
-    sm.execute()
+    
+    # Catch SMACH execution exceptions
+    try:
+        sm.execute()
+    except Exception as e:
+        rospy.logerr("SMACH execution interrupted: " + str(e))
 
 if __name__ == '__main__':
     main()
