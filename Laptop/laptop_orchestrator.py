@@ -66,6 +66,7 @@ class RunExplore(smach.State):
 class CollectWaypoints(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['done'])
+        
         # Latched publisher so the robot can grab it whenever it's ready
         self.pub_waypoints = rospy.Publisher('/control/waypoints', PoseArray, queue_size=1, latch=True)
         self.pub_done = rospy.Publisher('/control/waypoints_done', Empty, queue_size=1)
@@ -79,9 +80,11 @@ class CollectWaypoints(smach.State):
             rospy.loginfo("Waypoint {} saved.".format(len(pose_array.poses)))
 
         sub = rospy.Subscriber('/move_base_simple/goal', PoseStamped, callback)
-
+        
+        # Launch laptop-side visualization/navigation tools (e.g., RViz)
         try:
-            input("\n[LAPTOP] Please click waypoints in RViz using '2D Nav Goal'.\nPress [Enter] when finished...\n")
+            print("\n[LAPTOP] Please launch RViz.")
+            input("[LAPTOP] Please click waypoints in RViz using '2D Nav Goal'.\nPress [Enter] when finished...\n")
         except KeyboardInterrupt:
             pass
 
@@ -102,12 +105,6 @@ class LaptopNavigation(smach.State):
     def execute(self, userdata):
         global current_active_launch
         rospy.loginfo("=== STATE: LAPTOP NAVIGATION ===")
-        
-        # Launch laptop-side visualization/navigation tools (e.g., RViz)
-        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-        path = roslaunch.rlutil.resolve_launch_arguments(['turn_on_wheeltec_robot', 'rviz.launch'])[0]
-        current_active_launch = roslaunch.parent.ROSLaunchParent(uuid, [path])
-        current_active_launch.start()
 
         rospy.loginfo("[LAPTOP] Standing by. Press Ctrl+C to kill everything gracefully.")
         while not rospy.is_shutdown():

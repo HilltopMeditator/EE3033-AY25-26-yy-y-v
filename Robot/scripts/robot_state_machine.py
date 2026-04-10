@@ -30,8 +30,10 @@ class HeadlessMapping(smach.State):
         rospy.loginfo("=== STATE: MAPPING ===")
         
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-        path = roslaunch.rlutil.resolve_launch_arguments(['turn_on_wheeltec_robot', 'mapping.launch'])[0]
-        current_active_launch = roslaunch.parent.ROSLaunchParent(uuid, [path])
+        launchfile = ['turn_on_wheeltec_robot', 'mapping.launch']
+        launchargs = ["navigation:=true"]
+        roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(launchfile)[0], launchargs)]
+        current_active_launch = roslaunch.parent.ROSLaunchParent(uuid, roslaunch_file)
         current_active_launch.start()
         
         rospy.loginfo("[ROBOT] Mapping active. Waiting for explore_lite_done signal from laptop...")
@@ -85,17 +87,6 @@ class WaitAndExecuteWaypoints(smach.State):
     def execute(self, userdata):
         rospy.loginfo("[ROBOT] Waiting for waypoints from laptop...")
         
-        # THE ONE-LINER: Waits for the array and extracts the list of poses instantly
-        waypoint_poses = rospy.wait_for_message('/control/waypoints', PoseArray).poses
-        
-        rospy.loginfo("[ROBOT] Received {} waypoints! Executing...".format(len(waypoint_poses)))
-        
-        # Here you would typically loop through `waypoint_poses` and send them to the action client
-        # Example pseudo-code:
-        # for pose in waypoint_poses:
-        #     goal = MoveBaseGoal()
-        #     goal.target_pose.pose = pose
-        #     client.send_goal_and_wait(goal)
 
         while not rospy.is_shutdown():
             rospy.sleep(1.0)
