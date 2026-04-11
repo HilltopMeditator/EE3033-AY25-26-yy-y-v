@@ -6,7 +6,16 @@
     <arg name="scan_topic" default="scan"/>
     <arg name="map_topic"  default="/map"/>
 
+    <!-- Initial coordinates -->
+    <arg name="init_x" default="0.0"/>
+    <arg name="init_y" default="0.0"/>
+    <arg name="init_a" default="0.0"/>
+
     <node pkg="amcl" type="amcl" name="amcl" clear_params="true">
+      <param name="initial_pose_x" value="$(arg init_x)"/>
+      <param name="initial_pose_y" value="$(arg init_y)"/>
+      <param name="initial_pose_a" value="$(arg init_a)"/>
+      
       <param name="use_map_topic" value="$(arg use_map_topic)"/>
       <!-- Use rtabmap Map to connect TF tree -->
       <remap from="/map" to="/$(arg map_topic)"/>

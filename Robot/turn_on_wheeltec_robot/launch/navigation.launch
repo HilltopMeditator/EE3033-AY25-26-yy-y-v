@@ -1,5 +1,6 @@
 
 <launch>
+
  <!-- Enable the relevant low-level nodes of the robot and enable navigation -->
  <include file="$(find turn_on_wheeltec_robot)/launch/turn_on_wheeltec_robot.launch">
     <arg name="navigation"  default="true"/>
@@ -13,7 +14,15 @@
  </node>
 
  <!-- turn on AMCL-->
- <include file="$(find turn_on_wheeltec_robot)/launch/include/amcl.launch" />
+ <arg name="initial_pose_x" default="0.0"/>
+ <arg name="initial_pose_y" default="0.0"/>
+ <arg name="initial_pose_a" default="0.0"/>
+ 
+ <include file="$(find turn_on_wheeltec_robot)/launch/include/amcl.launch">
+  <arg name="init_x" value="$(arg initial_pose_x)"/>
+  <arg name="init_y" value="$(arg initial_pose_y)"/>
+  <arg name="init_a" value="$(arg initial_pose_a)"/>
+ </include>
 
  <!-- MarkerArray function node> -->
  <node name='send_mark' pkg="turn_on_wheeltec_robot" type="send_mark.py">

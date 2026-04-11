@@ -58,52 +58,78 @@ class RobotWorkerNode:
 
     class _HeadlessSaveAndKill(smach.State):
         def __init__(self, app_context):
-            smach.State.__init__(self, outcomes=['success', 'aborted'])
+            # Define output_keys to tell SMACH we are saving data locally
+            smach.State.__init__(self, 
+                                 outcomes=['success', 'aborted'],
+                                 output_keys=['pose_x', 'pose_y', 'pose_a'])
             self.app = app_context
 
         def execute(self, userdata):
             rospy.loginfo("=== STATE: SAVE_MAP & POSE ===")
+            
+            # Initialize userdata with defaults to prevent crashes in the next state if TF fails
+            userdata.pose_x = 0.0
+            userdata.pose_y = 0.0
+            userdata.pose_a = 0.0
+
             try:
-                # 1. POSE HANDOVER: Save position before killing SLAM
+                # 1. POSE HANDOVER: Extract position from TF tree
                 listener = tf.TransformListener()
                 rospy.sleep(1.0) # Buffer tf
                 try:
                     (trans, rot) = listener.lookupTransform('/map', '/base_link', rospy.Time(0))
                     yaw = tf.transformations.euler_from_quaternion(rot)[2]
-                    rospy.set_param('/initial_pose_x', trans[0])
-                    rospy.set_param('/initial_pose_y', trans[1])
-                    rospy.set_param('/initial_pose_a', yaw)
-                    rospy.loginfo("[ROBOT] Pose Handover Saved: x={:.2f}, y={:.2f}".format(trans[0], trans[1]))
+                    
+                    # Store values in userdata (Internal Script Memory)
+                    userdata.pose_x = trans[0]
+                    userdata.pose_y = trans[1]
+                    userdata.pose_a = yaw
+                    
+                    rospy.loginfo("[ROBOT] Local Pose Captured: x={:.2f}, y={:.2f}".format(trans[0], trans[1]))
                 except Exception as e:
-                    rospy.logwarn("[ROBOT] Failed to save pose: {}".format(e))
+                    rospy.logwarn("[ROBOT] Failed to capture pose, using 0,0,0: {}".format(e))
 
-                # 2. SAVE MAP
+                # 2. SAVE MAP: Execute the map_saver launch
                 self.app.start_launch('map_saver', 'turn_on_wheeltec_robot', 'map_saver.launch')
                 rospy.sleep(5.0) 
                 return 'success'
 
             except (KeyboardInterrupt, rospy.ROSInterruptException):
+                # Clean exit on Ctrl+C
                 rospy.signal_shutdown("Ctrl+C during Map Save")
                 return 'aborted'
             finally:
-                # LOCAL CLEANUP: Ensure mapping is dead before Nav starts
+                # CRITICAL SAFETY: Ensure SLAM is dead before Navigation tries to take over the TF tree
                 self.app.stop_launch('map_saver')
                 self.app.stop_launch('mapping')
 
     class _HeadlessNavigationBringup(smach.State):
         def __init__(self, app_context):
-            smach.State.__init__(self, outcomes=['ready', 'aborted'])
+            # Tell SMACH this state expects these three values from the previous state
+            smach.State.__init__(self, 
+                                 outcomes=['ready', 'aborted'],
+                                 input_keys=['pose_x', 'pose_y', 'pose_a'])
             self.app = app_context
 
         def execute(self, userdata):
             rospy.loginfo("=== STATE: NAVIGATION BRINGUP ===")
             try:
-                # Starts AMCL/Navigation using params from SaveAndKill
-                self.app.start_launch('navigation', 'turn_on_wheeltec_robot', 'navigation.launch')
+                # CONSTRUCT CLI ARGUMENTS
+                # We pull from userdata and format them as 'key:=value' strings
+                nav_args = [
+                    "initial_pose_x:={}".format(userdata.pose_x),
+                    "initial_pose_y:={}".format(userdata.pose_y),
+                    "initial_pose_a:={}".format(userdata.pose_a)
+                ]
+
+                rospy.loginfo("[ROBOT] Injecting Pose into CLI: x={:.2f}".format(userdata.pose_x))
+                
+                # Launch Navigation with the local variables passed as CLI args
+                self.app.start_launch('navigation', 'turn_on_wheeltec_robot', 'navigation.launch', nav_args)
+                
                 rospy.sleep(5.0)
                 return 'ready'
             except (KeyboardInterrupt, rospy.ROSInterruptException):
-                rospy.signal_shutdown("Ctrl+C during Nav Bringup")
                 return 'aborted'
 
     class _WaitAndExecuteWaypoints(smach.State):
@@ -126,6 +152,12 @@ class RobotWorkerNode:
 
     def _build_state_machine(self):
         sm = smach.StateMachine(outcomes=['complete', 'failed'])
+
+        # This acts as the 'local database' for the script
+        sm.userdata.pose_x = 0.0
+        sm.userdata.pose_y = 0.0
+        sm.userdata.pose_a = 0.0
+        
         with sm:
             smach.StateMachine.add('MAPPING', self._HeadlessMapping(self), 
                                    transitions={'done':'SAVE_AND_KILL', 'aborted':'failed'})

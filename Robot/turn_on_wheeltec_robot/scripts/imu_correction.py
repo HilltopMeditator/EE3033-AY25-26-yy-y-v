@@ -9,7 +9,7 @@ class IMUCorrector:
         rospy.init_node('imu_corrector')
         
         self.param_name = '/wheeltec/z_gyro_offset'
-        self.pub = rospy.Publisher('/imu_corrected', Imu, queue_size=10)
+        self.pub = rospy.Publisher('/imu_corrected_attempt', Imu, queue_size=10)
         
         # Integration state variables
         self.last_time = None
