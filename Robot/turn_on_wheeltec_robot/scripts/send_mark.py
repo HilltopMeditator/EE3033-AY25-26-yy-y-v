@@ -250,15 +250,22 @@ def click_callback(msg):
 #获取键值函数
 def getKey():
     fd = sys.stdin.fileno()
-    new_settings = termios.tcgetattr(fd)
-    new_settings[3]=new_settings[3] | termios.ECHO
+    old_settings = termios.tcgetattr(fd)
+    old_settings[3] = old_settings[3] | termios.ECHO
     try:
-        # termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
-        # tty.setraw(sys.stdin.fileno())
-        tty.setcbreak(sys.stdin.fileno())
-        key = sys.stdin.read(1)
+        tty.setcbreak(fd)
+        # Wrap select in a try block to handle the interrupt signal silently
+        try:
+            rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
+        except (select.error, OSError, IOError):
+            return '' # Return empty if the system call is interrupted (e.g. Ctrl+C)
+            
+        if rlist:
+            key = sys.stdin.read(1)
+        else:
+            key = ''
     finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     return key
 
 def send_mark():

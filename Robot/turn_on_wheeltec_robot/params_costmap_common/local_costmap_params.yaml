@@ -22,7 +22,7 @@ local_costmap:
   #Cost map height, unit: m
   height: 4.0 
   #Cost map resolution (meters/cell)
-  resolution: 0.05 
+  resolution: 0.02 
 
   #To create a cost map, two layers are used: an obstacle layer and an expansion layer.
   #Local cost dynamics requires high refresh rates, so static layers are not used to save computational resources.

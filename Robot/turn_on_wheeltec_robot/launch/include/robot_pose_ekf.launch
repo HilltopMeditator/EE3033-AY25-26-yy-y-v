@@ -1,6 +1,10 @@
 <launch>
   <!--no filtering when choosing cartogapher algorithm-->
   <arg name="is_cartographer" default="false"/>
+
+  <!-- IMU correction node -->
+  <node pkg="turn_on_wheeltec_robot" type="imu_correction.py" name="imu_corrector" output="screen" />
+
   <!-- Robot pose Extended Kalman filter -->
   <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" output="screen" unless="$(arg is_cartographer)">
     <param name="output_frame" value="odom_combined"/>
@@ -10,7 +14,8 @@
     <param name="odom_used" value="true"/>
     <param name="imu_used" value="true"/>
     <param name="vo_used" value="false"/>
-    <remap from="imu_data" to="imu_32" />
+    <!-- Remapping imu data to corrected IMU -->
+    <remap from="imu_data" to="imu_corrected" />
   </node>
 
 </launch>

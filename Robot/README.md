@@ -25,5 +25,5 @@ Replace the /path/to/ with your own path \
 
 ```bash
 scp -r </path/to/>scripts wheeltec@192.168.0.100:~/ros1_shared_dir
-scp -r </path/to/>turn_on_wheeltec_robot wheeltec@192.168.0.100:~/wheeltec/wheeltec_robot/src/
+scp -r </path/to/>turn_on_wheeltec_robot wheeltec@192.168.0.100:~/wheeltec_robot/src/
 ```

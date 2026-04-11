@@ -22,7 +22,7 @@ global_costmap:
   #The cost map height, increased by the static layer, in meters.
   height: 10.0 
   #Cost map resolution (meters/cell)
-  resolution: 0.05
+  resolution: 0.02
   
   #To create a cost map, three layers are set up: a static layer, an obstacle layer, and an expansion layer.
   plugins:
