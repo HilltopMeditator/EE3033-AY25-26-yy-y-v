@@ -4,6 +4,29 @@ Repository to host (blood, sweat and tears) our collective efforts towards makin
 
 PS: ples no hack, student grades matter
 
+## Dependancies
+
+Assumed system runs on ROS-noetic:
+
+```bash
+sudo apt-get update
+
+# 1. State Machine dependencies
+sudo apt-get install ros-noetic-smach ros-noetic-smach-ros
+
+# 2. Navigation Stack (Includes move_base, nav_msgs, costmap_2d, etc.)
+sudo apt-get install ros-noetic-navigation
+
+# 3. Actionlib and TF (Usually pre-installed with desktop-full, but good to ensure)
+sudo apt-get install ros-noetic-actionlib ros-noetic-actionlib-msgs ros-noetic-tf
+
+# 4. Frontier exploration package: Explore-lite 
+sudo apt-get install ros-noetic-m-explore
+
+# 5. Core Message Packages (If not already installed)
+sudo apt-get install ros-noetic-geometry-msgs ros-noetic-sensor-msgs ros-noetic-visualization-msgs ros-noetic-rosgraph-msgs
+```
+
 ## Usage
 
 ### Setup
@@ -94,3 +117,10 @@ On laptop:
 ## Run the script
 ./Laptop/laptop_commander.py
 ```
+
+## Credits + Acknowledgements
+
+May the contributors of these packages have their beers forever chilly and pillows forever comfy:
+
+1. [m-explore](https://github.com/hrnr/m-explore)
+2. [SMACH](https://github.com/ros/executive_smach)

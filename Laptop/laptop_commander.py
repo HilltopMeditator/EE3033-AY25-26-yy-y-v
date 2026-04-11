@@ -46,8 +46,11 @@ class LaptopCommanderNode:
             
             try:
                 # 1. Start explore_lite
-                home_dir = os.path.expanduser("~")
-                launch_path = os.path.join(home_dir, "explore_lite_ws/src/launch/laptop_explore.launch")
+                # Get the absolute path to the directory where this script lives
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                
+                # Look for the launch file in the exact same directory
+                launch_path = os.path.join(current_dir, "laptop_explore.launch")
                 self.app.start_launch_by_path('explore', launch_path)
 
                 # 2. DEFINING THE ADEQUATE CONDITION: Log Listener
