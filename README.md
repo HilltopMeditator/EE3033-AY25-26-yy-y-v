@@ -21,7 +21,7 @@ sudo apt-get install ros-noetic-navigation
 sudo apt-get install ros-noetic-actionlib ros-noetic-actionlib-msgs ros-noetic-tf
 
 # 4. Frontier exploration package: Explore-lite 
-sudo apt-get install ros-noetic-m-explore
+sudo apt-get install ros-noetic-explore-lite
 
 # 5. Core Message Packages (If not already installed)
 sudo apt-get install ros-noetic-geometry-msgs ros-noetic-sensor-msgs ros-noetic-visualization-msgs ros-noetic-rosgraph-msgs
