@@ -122,5 +122,5 @@ On laptop:
 
 May the contributors of these packages have their beers forever chilly and pillows forever comfy:
 
-1. [m-explore](https://github.com/hrnr/m-explore)
-2. [SMACH](https://github.com/ros/executive_smach)
+1. [m-explore](https://wiki.ros.org/explore_lite)
+2. [SMACH](https://wiki.ros.org/smach)
