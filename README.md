@@ -124,3 +124,6 @@ May the contributors of these packages have their beers forever chilly and pillo
 
 1. [m-explore](https://wiki.ros.org/explore_lite)
 2. [SMACH](https://wiki.ros.org/smach)
+3. [Navigation Parameter Tuning guide](https://kaiyuzheng.me/documents/navguide.pdf)
+
+Software and Dataflow Design by us, code written with Gemini (2/10 experience, wouldn't really recommend) 

@@ -4,13 +4,15 @@ ENV files and launch configurations for the robot
 ## turn_on_wheeltec_robot:
 Mostly a read only reference.
 
-This has to be uploaded to `<bot>:~/wheeltec/wheeltec_robot`
+This has to be uploaded to `<bot>:~/wheeltec_robot`
 
 NOTE ANY CHANGES TO LAUNCH CONFIGS HERE:
 
 > (it's empty here for now)
 >
 > (perhaps you should try looking in another castle?)
+>
+> Too many to list, i kinda gave up lol
 
 ## scripts
 
