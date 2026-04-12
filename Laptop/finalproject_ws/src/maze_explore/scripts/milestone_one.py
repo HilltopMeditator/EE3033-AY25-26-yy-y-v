@@ -35,6 +35,7 @@ class MultiWaypointNav:
         rospy.init_node('multi_waypoint_nav')
 
         # ---------------- Core Systems ----------------
+	# Publisher and Subscriber activation
         self.listener = tf.TransformListener()
         self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
         self.cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
@@ -47,11 +48,13 @@ class MultiWaypointNav:
         self.move_base.wait_for_server()
 
         # ---------------- State ----------------
-        self.state = RobotState.EXPLORING
+        # Initialize State
+	self.state = RobotState.EXPLORING
         self.manual_control = False
 
         # ---------------- Detection ----------------
-        self.target_class = "bottle"
+	# Initialize variables and detection time        
+	self.target_class = "bottle"
         self.target_detected = False
         self.target_close = False
         self.last_detection_time = rospy.Time(0)
@@ -60,11 +63,13 @@ class MultiWaypointNav:
 	#self.marker_id=0
 
         # ---------------- Scan ----------------
-        self.scan_angle_step = math.radians(10)
+	# Scan Rotation Control Variables        
+	self.scan_angle_step = math.radians(10)
         self.angular_speed = 0.3
 
         # ---------------- Map / Waypoints ----------------
-        self.start_pose = Pose(Point(-0.002, -0.044, 0.000), Quaternion(0.000, 0.000, 0.112, 0.994))
+	# Initialize start/home pose & load in array of waypoints         
+	self.start_pose = Pose(Point(-0.002, -0.044, 0.000), Quaternion(0.000, 0.000, 0.112, 0.994))
         self.waypoints = self.load_waypoints()
         self.current_wp_index = 0
 
@@ -72,7 +77,7 @@ class MultiWaypointNav:
         self.latest_scan = None
 
         rospy.on_shutdown(self.shutdown)
-
+	# Begin Exploration
         self.run()
 
     # ---------------------- MAIN LOOP ----------------------
@@ -107,23 +112,32 @@ class MultiWaypointNav:
 
     def handle_exploring(self):
         rospy.loginfo("State: EXPLORING")
-
+	
+	# Sends the robot to the desired waypoint in the array
         goal_pose = self.waypoints[self.current_wp_index]
         success = self.send_goal(goal_pose)
 
+	# If waypoint is reached successfully:
+	# state switches to scanning
+	# Otherwise point may be unreachable:
+	# set to skip
         if success:
             rospy.loginfo("Reached waypoint")
             self.state = RobotState.SCANNING
         else:
             rospy.logwarn("Failed to reach waypoint")
 
+	# Index in waypoint array updated
         self.current_wp_index = (self.current_wp_index + 1) % len(self.waypoints)
 
     def handle_scanning(self):
         rospy.loginfo("State: SCANNING")
-
+	# 360 scan
         found = self.scan_360()
 
+	# If target detected during scan:
+	# switch to approaching
+	# otherwise back to exploring
         if found:
             self.state = RobotState.APPROACHING
         else:
@@ -135,29 +149,33 @@ class MultiWaypointNav:
         self.take_manual_control()
 
         while not rospy.is_shutdown():
-
+	    # Consistantly check if target is too close
             if self.target_close:
                 rospy.loginfo("Target reached")
                 self.release_manual_control()
                 self.state = RobotState.LOCK_TARGET
                 return
-		
+	    # Only use microscan to stabilize
+	    # after coming from 360 scan	
 	    if self.microscan == 0:
 	    	self.micro_scan()
             samples = self.stabilize_and_sample()
-
+	    # if len of samples is 0 =
+	    # no object detected/lost -->
+	    # scan the area before moving on
 	    if len(samples) == 0:
     		rospy.logwarn("No stable detection → scanning")
     	        self.state = RobotState.SCANNING
     		return
-
+	    # if detection data collected successfully:
+	    # use average value of normal error for approach
 	    error_n = sum(samples) / len(samples)
 	    self.apply_approach_control(error_n)
             rospy.sleep(0.05)
 
     def handle_lock_target(self):
         rospy.loginfo("State: LOCK_TARGET")
-
+	# lock in coordinates and go home
         self.lock_target_coordinates(self.latest_scan)
 	
         self.state = RobotState.GO_HOME
@@ -205,12 +223,16 @@ class MultiWaypointNav:
         self.take_manual_control()
 	rospy.loginfo("Starting 360 Scan")
 	self.microscan = 0
+	# if scanning due to lost target:
+	# go back a bit robot may be too close to object
 	if self.lost == 1:
 	    self.go_back()
 
         twist = Twist()
         twist.angular.z = self.angular_speed
 
+	# for loop publishes angular vel
+	# robot turns a desired amount for a number of steps
 	steps = int((2 * math.pi / self.scan_angle_step) + 11)
 
         for _ in range(steps):
@@ -220,7 +242,7 @@ class MultiWaypointNav:
 
             while (rospy.Time.now() - start).to_sec() < duration:
                 self.cmd_vel_pub.publish(twist)
-
+		# after every little turn check for target detection
                 if self.target_detected:
                     self.release_manual_control()
 		    rospy.loginfo("Target Detected")
@@ -230,7 +252,9 @@ class MultiWaypointNav:
 
             self.cmd_vel_pub.publish(Twist())
             rospy.sleep(0.2)
-
+	
+	# stabilization at the end of scan
+	# helps mitigate lag + potentially missing a detection
 	if self.scan_end_stabilization():
 		return True
 	
@@ -260,6 +284,7 @@ class MultiWaypointNav:
     	    twist.linear.x = 0.06  # move forward slowly when aligned
 	    rospy.loginfo("Moving Forward")
 	
+	# publish vel command
 	starttime = rospy.Time.now()
 	Duration = rospy.Duration(3.0)
 	rospy.loginfo("angular_z: " + str(twist.angular.z))
@@ -270,20 +295,25 @@ class MultiWaypointNav:
     # ---------------------- DETECTION ----------------------
 
     def detection_callback(self, msg):
-	
+
+	# if multiple detections --> store all	
         boxes = [b for b in msg.bounding_boxes if b.Class == self.target_class]
 
 	rospy.loginfo("Detetction CMD")
+	# if desired object detected
         if boxes:
+	    # Everytime there is a detection update detection time
 	    self.last_detection_time=rospy.Time.now()
+	    self.last_time1 = self.last_detection_time
 	    self.updated_time = self.last_detection_time.to_sec()
 	    rospy.loginfo("Updated detection time: " + str(self.updated_time))
+	    # If multiple detetctions, box with highest probability is used
             best = max(boxes, key=lambda b: b.probability)
 
+	    # Target detected
             self.target_detected = True
-            self.last_detection_time = rospy.Time.now()
-	    self.last_time1 = self.last_detection_time
 
+	    # Store bounding box information
             self.box_center_x = (best.xmin + best.xmax) / 2
             self.image_width = 640
 	    self.box_width = best.xmax - best.xmin
@@ -294,12 +324,14 @@ class MultiWaypointNav:
 	    self.target_close = self.box_width >= 150
 
         else:
+	    # Time allowed to pass before declaring lost target
             self.target_detected = (rospy.Time.now() - self.last_detection_time).to_sec() < 5.0
             self.target_close = False
 
     # ---------------------- TARGET LOCK ----------------------
 
     def lock_target_coordinates(self, scan):
+	# First get robot position
         self.listener.waitForTransform('map', 'base_link', rospy.Time(0), rospy.Duration(1.0))
         (trans, rot) = self.listener.lookupTransform('map', 'base_link', rospy.Time(0))
 
@@ -311,12 +343,17 @@ class MultiWaypointNav:
 	# Robot Marker
 	#self.publish_target_marker(robot_x, robot_y)
 
+	# object offset angle
         theta = (self.box_center_x - self.image_width/2) / (self.image_width/2) * (math.radians(60)/2)
 
+	# Try using Lidar
         if scan:
+	    # Use beam in the direction of the object
+	    # Convert andle to idx
             idx = int((theta - scan.angle_min) / scan.angle_increment)
-            idx = max(0, min(idx, len(scan.ranges)-1))
+            idx = max(0, min(idx, len(scan.ranges)-1)) # safety clamp
             # Only possible if object is within laser scan height
+	    # Within a small window collect beam data
 	    vals = []
 
 	    for i in range(idx - 3, idx + 4):  # small window
@@ -334,7 +371,8 @@ class MultiWaypointNav:
     		d = 0.15
 	    if d > 0.5:
 		d=0.15
-	
+
+	# log robot and target pose	
 	rospy.loginfo("d Val:" +str(d))
         target_x = robot_x + d * math.cos(yaw + theta)
         target_y = robot_y + d * math.sin(yaw + theta)
@@ -383,6 +421,7 @@ class MultiWaypointNav:
     	self.cmd_vel_pub.publish(Twist())
     	rospy.sleep(0.2)  # let motion fully stop  
 
+	# detection in place
 	start = rospy.Time.now()  
         while (rospy.Time.now() - start).to_sec() < duration:
 	    if self.target_detected:
@@ -397,12 +436,13 @@ class MultiWaypointNav:
     	self.cmd_vel_pub.publish(Twist())
     	rospy.sleep(0.2)  # let motion fully stop
 
-
+	# collect normalized error samples
     	samples = []
 	last_time = self.last_time1
 
 	while len(samples) < samples_needed:
 	    age = (rospy.Time.now()-self.last_detection_time).to_sec()
+	    # Only add sample if new detection occurs
 	    if self.last_detection_time != last_time:
 		rospy.loginfo("Detection age in sec: " + str(age))
 		last_time = self.last_time1
@@ -411,6 +451,7 @@ class MultiWaypointNav:
 		self.error_n = float(error_x) / image_center
             	samples.append(self.error_n)
 	    timeout = rospy.Duration(20.0)
+	    # Helps prevent lost target spamming
 	    if rospy.Time.now() - self.last_detection_time < timeout and self.overtime ==1:
 		self.overtime=0
             if rospy.Time.now() - self.last_detection_time > timeout and self.overtime==0:
@@ -426,6 +467,8 @@ class MultiWaypointNav:
             rospy.sleep(0.05)
     	return samples
 
+    # Slight opposite direction turn when target detected
+    # helps mitigate lag
     def micro_scan(self):
 	rospy.loginfo("Micro Scan")
 	self.microscan=1
@@ -440,6 +483,8 @@ class MultiWaypointNav:
     	self.cmd_vel_pub.publish(Twist())
     	rospy.sleep(0.5)
 
+    # Robot goes slighly back
+    # for better detection
     def go_back(self):
 	rospy.loginfo("Going back a bit")
 	self.lost=0
@@ -478,7 +523,7 @@ class MultiWaypointNav:
     	marker.scale.z = 0.2
 	
 
-    	# Color (RED)
+    	# Colors
 	if self.marker_id == 1:
 	    marker.color.r = 0.0
     	    marker.color.g = 0.0
