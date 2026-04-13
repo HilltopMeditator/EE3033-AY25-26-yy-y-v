@@ -28,7 +28,7 @@ GlobalPlanner:
 
   lethal_cost: 253
   neutral_cost: 50
-  cost_factor: 3.0
+  cost_factor: 0.8
   #How to set the orientation of each point 
   orientation_mode: 0
   #What window to use to determine the orientation based on the position derivative specified by the orientation mode

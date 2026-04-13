@@ -23,15 +23,15 @@ DWAPlannerROS:
   latch_xy_goal_tolerance: false #Setting it to true means that if the robot reaches the tolerance distance, it will rotate in place; even if the rotation will cause it to run outside the tolerance distance.
 
   #Forward simulation parameters
-  sim_time: 3.0      #The time for forward trajectory simulation is expressed in seconds.
+  sim_time: 2.0      #The time for forward trajectory simulation is expressed in seconds.
   vx_samples: 6      #Number of sampling points in the x-direction velocity space
   vy_samples: 0      #Number of space sampling points for velocity in the y-direction. A differential-driven robot always has only one value (0.0) in the y-direction.
   vtheta_samples: 20 #Number of space sampling points for velocity in the direction of rotation
 
   #Trajectory scoring parameters
-  path_distance_bias: 100.0     #Weights for the proximity of the controller to a given path
-  goal_distance_bias: 15.0      #The weights of the proximity between the controller and the local target point are also used for speed control.
-  occdist_scale: 0.6            #The degree to which the controller avoids obstacles
+  path_distance_bias: 1000.0   #Weights for the proximity of the controller to a given path
+  goal_distance_bias: 500      #The weights of the proximity between the controller and the local target point are also used for speed control.
+  occdist_scale: 5           #The degree to which the controller avoids obstacles
   forward_point_distance: 0.325 #An additional scoring point is placed at the distance from the robot.
   stop_time_buffer: 0.1         #The minimum amount of time a robot must have before a collision occurs. The trajectory used within this time is still considered valid. In other words, the length of time the robot must stop in advance to prevent a collision.
   scaling_speed: 0.25           #The absolute value of the velocity at which the robot's footprint begins to scale, in m/s.
