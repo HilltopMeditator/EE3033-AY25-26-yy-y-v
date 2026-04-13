@@ -186,7 +186,16 @@ class LaptopCommanderNode:
 
     def run(self):
         # Start persistent RViz first
-        rviz_path = os.path.expanduser("~/ee3033 rviz setup.rviz")
+        # Path to the rviz file (located one level up in the repo root as of writing)
+        rviz_path = os.path.join(current_dir, "..", "ee3033 rviz setup.rviz")
+        
+        # Check if it exists locally first, fallback to home directory
+        if not os.path.exists(rviz_path):
+            rospy.logwarn("[LAPTOP] Config not found at {}, checking home...".format(rviz_path))
+            rviz_path = os.path.expanduser("~/ee3033 rviz setup.rviz")
+
+        rospy.loginfo("[LAPTOP] Launching RViz with config: {}".format(rviz_path))
+        
         self.start_node('rviz', 'rviz', 'rviz', args='-d "{}"'.format(rviz_path))
         self._sm.execute()
 

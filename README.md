@@ -25,6 +25,13 @@ sudo apt-get install ros-noetic-explore-lite
 
 # 5. Core Message Packages (If not already installed)
 sudo apt-get install ros-noetic-geometry-msgs ros-noetic-sensor-msgs ros-noetic-visualization-msgs ros-noetic-rosgraph-msgs
+
+# 6. Camera & Image Transport (For bot and laptop)
+sudo apt-get install ros-noetic-image-transport ros-noetic-image-transport-plugins ros-noetic-compressed-image-transport
+
+# 7. Darknet ROS Dependencies (Laptop)
+# Ensure you have standard build tools for compiling darknet_ros
+sudo apt-get install build-essential git
 ```
 
 ## Usage
@@ -32,8 +39,6 @@ sudo apt-get install ros-noetic-geometry-msgs ros-noetic-sensor-msgs ros-noetic-
 ### Setup
 
 ```bash
-scp "./ee3033 rviz setup.rviz" ~
-
 ## change robot directory perms
 ssh wheeltec@192.168.0.100 ## then type password
 chmod 755 ~  
@@ -96,26 +101,64 @@ nano ~/.ssh/config
 
 </details>
 
-### Running it
+### Running the program(s)
 
-On robot:
+#### Terminal 1: Robot Base Operations
+
 ```bash
-## Timesync for amcl: needs key-based auth
-./timesync_script.sh ## then type password REALLY FAST: dongguan
+## Timesync for amcl
+ping 192.168.0.100 ## Establish/check connection with wheeltec robot
+./timesync_script.sh ## enter password REALLY FAST
 
-## Logging in 
-ssh wheeltec@192.168.0.100 ## then type password
+## Log in and start ROS
+ssh wheeltec@192.168.0.100
 ros1_start
 ros1
 
-## Run the script
+## 1. Start the main robot worker
 /home/wheeltec/ros1_shared_dir/scripts/robot_worker.py
 ```
 
-On laptop:
+#### Terminal 2: Laptop Commander & Rviz
 ```bash
-## Run the script
+## 2. Run laptop commander (Rviz will load automatically with setup.rviz)
 ./Laptop/laptop_commander.py
+```
+*(Proceed to map the environment and collect your waypoints via Rviz)*
+
+#### Terminal 3: Robot Camera Stream
+
+```bash
+## Log back into the robot in a new tab
+ssh wheeltec@192.168.0.100
+ros1
+
+## 3. Launch the USB Camera
+roslaunch usb_cam usb_cam-test.launch
+```
+
+#### Terminal 4: Laptop Image Decompression
+```bash
+## 4. Republish the compressed image feed locally to raw for YOLO
+rosrun image_transport republish compressed in:=/usb_cam/image_raw raw out:=/usb_cam/image_raw_uncompressed
+```
+
+#### Terminal 5: Laptop Object Detection (YOLO)
+
+```bash
+source Laptop/finalproject_ws/devel/setup.bash
+
+## 5. Launch Darknet ROS pointing to the uncompressed image topic
+roslaunch darknet_ros darknet_ros.launch image:=/usb_cam/image_raw_uncompressed camera_info:=/usb_cam/camera_info
+```
+
+#### Terminal 6: Laptop Maze Exploration Script
+
+```bash
+source Laptop/finalproject_ws/devel/setup.bash
+
+## 6. Run the milestone logic
+rosrun maze_explore milestone_one.py
 ```
 
 ## Credits + Acknowledgements
@@ -126,4 +169,4 @@ May the contributors of these packages have their beers forever chilly and pillo
 2. [SMACH](https://wiki.ros.org/smach)
 3. [Navigation Parameter Tuning guide](https://kaiyuzheng.me/documents/navguide.pdf)
 
-Software and Dataflow Design by us, code written with Gemini (2/10 experience, wouldn't really recommend) 
+Software and Dataflow Design by Yaritza, V & resunw, code written with Gemini (2/10 experience, wouldn't really recommend) 
