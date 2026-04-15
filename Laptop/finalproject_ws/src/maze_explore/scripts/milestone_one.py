@@ -53,14 +53,15 @@ class MultiWaypointNav:
         self.manual_control = False
 
         # ---------------- Detection ----------------
-        # Initialize variables and detection time        
-        self.target_class = "bottle"
+	# Initialize variables and detection time        
+	self.target_class = "bottle"
+	self.max_box_width = 150
         self.target_detected = False
         self.target_close = False
         self.last_detection_time = rospy.Time(0)
-        self.lost = 0
-        self.overtime = 0
-        self.marker_id=0
+	self.lost=0
+	self.overtime=0
+	self.marker_id=0
 
         # ---------------- Scan ----------------
         # Scan Rotation Control Variables        
@@ -83,9 +84,9 @@ class MultiWaypointNav:
 
     def run(self):
         rospy.loginfo("Starting state machine...")
-        #marker=Marker()
-        #marker.action = Marker.DELETEALL
-        #self.marker_pub.publish(marker)
+	marker=Marker()
+	marker.action = Marker.DELETEALL
+	self.marker_pub.publish(marker)
 
         while not rospy.is_shutdown():
 
@@ -230,9 +231,10 @@ class MultiWaypointNav:
         twist = Twist()
         twist.angular.z = self.angular_speed
 
-        # for loop publishes angular vel
-        # robot turns a desired amount for a number of steps
-        steps = int((2 * math.pi / self.scan_angle_step) + 11)
+
+	# for loop publishes angular vel
+	# robot turns a desired amount for a number of steps
+	steps = int((2 * math.pi / self.scan_angle_step) + 12)
 
         for _ in range(steps):
 
@@ -264,28 +266,33 @@ class MultiWaypointNav:
     # ---------------------- APPROACH ----------------------
 
     def apply_approach_control(self, error_n):
-        twist = Twist()
-        rospy.loginfo("Approaching")
-        rospy.loginfo("Error_N: " + str(error_n))
+	twist = Twist()
+	rospy.loginfo("Approaching")
+	rospy.loginfo("Error_N: " + str(error_n))
 
-        # If it is centered enough stop rotating
-        if abs(error_n) > 0.2:
-            twist.angular.z = -0.3 * error_n   # proportional turning
-            twist.linear.x = 0.0  # don't move forward while turning
-            rospy.loginfo("Rotating")
+	# If it is centered enough stop rotating
+	if abs(error_n) > 0.2:
+    	    twist.angular.z = -0.3 * error_n   # proportional turning
 
-        else:
-            twist.angular.z = 0.0
-            twist.linear.x = 0.06  # move forward slowly when aligned
-            rospy.loginfo("Moving Forward")
-    
-        # publish vel command
-        starttime = rospy.Time.now()
-        Duration = rospy.Duration(3.0)
-        rospy.loginfo("angular_z: " + str(twist.angular.z))
-        while (rospy.Time.now() - starttime) < Duration:
-            self.cmd_vel_pub.publish(twist)
-            rospy.sleep(0.05)   
+
+    	    twist.linear.x = 0.0  # don't move forward while turning
+	    rospy.loginfo("Rotating")
+
+	else:
+    	    twist.angular.z = 0.0
+	    if (self.max_box_width-self.box_width) <= 40:
+		twist.linear.x = 0.02 # move even slower when close to target
+	    else:
+    	    	twist.linear.x = 0.06  # move forward slowly when aligned
+	    rospy.loginfo("Moving Forward")
+	
+	# publish vel command
+	starttime = rospy.Time.now()
+	Duration = rospy.Duration(3.0)
+	rospy.loginfo("angular_z: " + str(twist.angular.z))
+	while (rospy.Time.now() - starttime) < Duration:
+    		self.cmd_vel_pub.publish(twist)
+    		rospy.sleep(0.05)   
 
     # ---------------------- DETECTION ----------------------
 
@@ -316,7 +323,7 @@ class MultiWaypointNav:
 
             #self.area = (best.xmax - best.xmin) * (best.ymax - best.ymin)
             # Utilizing width instead of area, more stable
-            self.target_close = self.box_width >= 150
+	    self.target_close = self.box_width >= self.max_box_width
 
         else:
             # Time allowed to pass before declaring lost target
@@ -466,18 +473,18 @@ class MultiWaypointNav:
     # Slight opposite direction turn when target detected
     # helps mitigate lag
     def micro_scan(self):
-        rospy.loginfo("Micro Scan")
-        self.microscan = 1
-        twist = Twist()
-        twist.angular.z = -0.8  
-        starttime = rospy.Time.now()
-        duration = rospy.Duration(1.0)
-        while (rospy.Time.now() - starttime) < duration:
-            self.cmd_vel_pub.publish(twist)
-            rospy.sleep(0.05)
+	rospy.loginfo("Micro Scan")
+	self.microscan=1
+    	twist = Twist()
+    	twist.angular.z = -0.5  
+	starttime = rospy.Time.now()
+	duration = rospy.Duration(1.0)
+	while (rospy.Time.now() - starttime) < duration:
+    		self.cmd_vel_pub.publish(twist)
+    		rospy.sleep(0.05)
 
-        self.cmd_vel_pub.publish(Twist())
-        rospy.sleep(0.5)
+    	self.cmd_vel_pub.publish(Twist())
+    	rospy.sleep(0.5)
 
     # Robot goes slighly back
     # for better detection
